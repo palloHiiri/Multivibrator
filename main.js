@@ -1,28 +1,27 @@
 /* ---------- переменные ---------- */
 let chart;
+let R_left = 0;
+let C_left = 0;
+let R_right = 0;
+let C_right = 0;
 
 /* ---------- модель: прямоугольный сигнал от R и C ---------- */
-function simulateSquareWave(R_kOhm, C_uF, points = 1000) {
-    const R = R_kOhm * 1000;
-    const C = C_uF * 1e-6;
-    const tau = R * C;
-    const period = 2 * tau;
-
-    const Uhi = 6;
-    const Ulo = -6;
-    const dt = period / (points / 4);
-    const t = [], u = [];
+function simulateLinearU(R, C, points = 1000, maxT = 1) {
+    const t = [];
+    const u = [];
+    const dt = maxT / points;
 
     for (let i = 0; i < points; i++) {
         const time = i * dt;
-        const phase = time % period;
-        const signal = phase < tau ? Uhi : Ulo;
+        const voltage = C * time + R;
         t.push(+time.toFixed(5));
-        u.push(signal);
+        u.push(+voltage.toFixed(3));
     }
 
     return { t, u };
 }
+
+
 
 /* ---------- создать график с двумя сигналами ---------- */
 function createUnifiedChart(ctx) {
@@ -81,29 +80,24 @@ function createUnifiedChart(ctx) {
     });
 }
 
-/* ---------- достать R и C из формы ---------- */
-function readForm(id) {
-    const f = document.forms[id];
-    return {
-        R: +f.resistance.value,
-        C: +f.capacitance.value
-    };
-}
 
 /* ---------- построить оба сигнала на одном графике ---------- */
 function plotUnified() {
-    const f1 = readForm('controls1');
-    const f2 = readForm('controls2');
-
-    const { t: t1, u: u1 } = simulateSquareWave(f1.R, f1.C);
-    const { t: t2, u: u2 } = simulateSquareWave(f2.R, f2.C);
-
+    const { t: t1, u: u1 } = simulateLinearU(R_left, C_left);
+    const { t: t2, u: u2 } = simulateLinearU(R_right, C_right);
+    console.log(R_left, R_right, C_left, C_right)
     chart.data.labels = t1;
     chart.data.datasets[0].data = u1;
     chart.data.datasets[1].data = u2;
 
+    chart.data.datasets[0].label = `Канал 1 (R=${R_left}, C=${C_left})`;
+    chart.data.datasets[1].label = `Канал 2 (R=${R_right}, C=${C_right})`;
+
     chart.update();
 }
+
+
+
 
 /* ---------- инициализация ---------- */
 window.addEventListener('DOMContentLoaded', () => {
@@ -111,7 +105,7 @@ window.addEventListener('DOMContentLoaded', () => {
     chart = createUnifiedChart(ctx);
 
     document.getElementById('runBtn').addEventListener('click', plotUnified);
-    plotUnified(); // первый запуск
+     // первый запуск
 });
 
 // В начале файла script.js или через отдельный загрузчик
@@ -212,8 +206,8 @@ function init() {
         // Создаем S-образную кривую с несколькими точками
         // Делим расстояние по Y на 3 части
         const yDist = y2 - y1;
-        const y_1 = y1 + yDist * 0.3;
-        const y_2 = y1 + yDist * 0.7;
+        const y_1 = y1 + yDist * 0.5;
+        const y_2 = y1 + yDist * 0.3;
 
         // Смещение для создания S-образной формы
         const offsetRight = 30;  // Смещение вправо
@@ -279,6 +273,7 @@ function init() {
 
             // Обновляем отображение значений
             updateValues();
+
         });
     });
 
@@ -349,28 +344,23 @@ function init() {
                 }
             }
 
-            // Сбрасываем состояние перетаскивания
             draggedHandle = null;
             draggedWire = null;
 
-            // Обновляем отображение значений
             updateValues();
         }
     });
 
     // Кнопка сброса всех соединений
     resetButton.addEventListener('click', function() {
-        // Удаляем все проводки
         while (connectionsGroup.firstChild) {
             connectionsGroup.removeChild(connectionsGroup.firstChild);
         }
 
-        // Сбрасываем объект соединений
         for (const topId in connections) {
             connections[topId] = null;
         }
 
-        // Обновляем отображение значений
         updateValues();
     });
 
@@ -382,37 +372,38 @@ function init() {
         document.getElementById('resistanceRight').textContent = '-';
         document.getElementById('capacitanceRight').textContent = '-';
 
+        R_left = 0;
+        C_left = 0;
+        R_right = 0;
+        C_right = 0;
+        
         if (connections.top2) {
             const { row } = connections.top2;
             const value = values.top2[row];
+            R_left = parseFloat(value);
             document.getElementById('capacitanceLeft').textContent = value;
         }
-        // Левый блок: top1 — сопротивление, top2 — ёмкость
         if (connections.top1) {
             const { row } = connections.top1;
             const value = values.top1[row];
+            C_left = parseFloat(value);
             document.getElementById('resistanceLeft').textContent = value;
         }
-        
-
-        // Правый блок: top4 — сопротивление, top3 — ёмкость
         if (connections.top4) {
             const { row } = connections.top4;
             const value = values.top4[row];
+            C_right = parseFloat(value);
             document.getElementById('resistanceRight').textContent = value;
         }
         if (connections.top3) {
             const { row } = connections.top3;
             const value = values.top3[row];
+            R_right = parseFloat(value);
             document.getElementById('capacitanceRight').textContent = value;
         }
     }
-
-
-
-    // Инициализация отображения значений
+    
     updateValues();
 }
 
-// (fetch SVG выше вызывает init() после вставки)
 

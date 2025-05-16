@@ -129,3 +129,14 @@ input[type=number]{width:100%;margin-top:0.25rem;padding:0.3em}
 }
 
 
+#resetButton{
+    right:var(--gap);
+    bottom:calc(var(--gap) + 20px); /* чуть выше нижнего края */
+    z-index:1000;
+    padding:0.7em 1.4em;
+    border:none;border-radius:6px;
+    background:#006cff;color:#fff;font-size:1rem;cursor:pointer;
+    align-content: center;
+    align-self: center;
+    margin-top: auto;
+}
