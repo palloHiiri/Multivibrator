@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Симулятор мультивибратора</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header>
+    <h1>Симулятор мультивибратора</h1>
+</header>
+
+<main>
+    <!-- ЛЕВАЯ ПАНЕЛЬ -->
+    <aside id="left" class="panel">
+        <h2>График 1</h2>
+        <form id="controls1">
+            <label>R, кΩ <input type="number" name="resistance" value="4.7" step="0.1" min="0" /></label>
+            <label>C, µF <input type="number" name="capacitance" value="2.2" step="0.1" min="0" /></label>
+        </form>
+        <div id="valuesGroupLeft">
+
+            <p><strong>Емкость:</strong> <span id="resistanceLeft">-</span> qF</p>
+            <p><strong>Сопротивление:</strong> <span id="capacitanceLeft">-</span> K</p>
+        </div>
+        <p>Перетащите проводок от маленького верхнего кружка к большому для создания соединения.</p>
+        <button id="resetButton">Сбросить все соединения</button>
+    </aside>
+
+    <!-- ОБЛАСТЬ ГРАФИКОВ -->
+    <section id="charts">
+        <div class="charts-flex">
+            <canvas id="chart1"></canvas>
+
+        </div>
+
+        <!-- БОЛЬШАЯ СХЕМА -->
+        <div id="schematic-wrapper">
+
+            <div id="svg-container"></div>
+        </div>
+    </section>
+
+    <!-- ПРАВАЯ ПАНЕЛЬ -->
+    <aside id="right" class="panel">
+        <h2>График 2</h2>
+        <form id="controls2">
+            <label>R, кΩ <input type="number" name="resistance" value="6.8" step="0.1" min="0" /></label>
+            <label>C, µF <input type="number" name="capacitance" value="1.0" step="0.1" min="0" /></label>
+        </form>
+        <div id="valuesGroupRight">
+
+            <p><strong>Емкость:</strong> <span id="resistanceRight">-</span> qF</p>
+            <p><strong>Сопротивление:</strong> <span id="capacitanceRight">-</span> K</p>
+        </div>
+
+
+        <!-- Кнопка внутри правой панели -->
+        <button id="runBtn">Запустить&nbsp;симуляцию</button>
+    </aside>
+</main>
+
+
+
+<!-- Скрипты -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

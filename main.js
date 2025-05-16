@@ -1,0 +1,418 @@
+/* ---------- переменные ---------- */
+let chart;
+
+/* ---------- модель: прямоугольный сигнал от R и C ---------- */
+function simulateSquareWave(R_kOhm, C_uF, points = 1000) {
+    const R = R_kOhm * 1000;
+    const C = C_uF * 1e-6;
+    const tau = R * C;
+    const period = 2 * tau;
+
+    const Uhi = 6;
+    const Ulo = -6;
+    const dt = period / (points / 4);
+    const t = [], u = [];
+
+    for (let i = 0; i < points; i++) {
+        const time = i * dt;
+        const phase = time % period;
+        const signal = phase < tau ? Uhi : Ulo;
+        t.push(+time.toFixed(5));
+        u.push(signal);
+    }
+
+    return { t, u };
+}
+
+/* ---------- создать график с двумя сигналами ---------- */
+function createUnifiedChart(ctx) {
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'Канал 1',
+                    data: [],
+                    borderColor: '#facc15',
+                    fill: false,
+                    tension: 0,
+                    pointRadius: 0,
+                    borderWidth: 2
+                },
+                {
+                    label: 'Канал 2',
+                    data: [],
+                    borderColor: '#3b82f6',
+                    fill: false,
+                    tension: 0,
+                    pointRadius: 0,
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            aspectRatio: 0.1,
+            animation: false,
+            layout: { padding: 0 },
+            scales: {
+                x: {
+                    type: 'linear',
+                    title: { display: true, text: 't, с' },
+                    min: 0
+                },
+                y: {
+                    title: { display: true, text: 'U, В' },
+                    min: -7,
+                    max: 7,
+                    grid: {
+                        color: '#aaa'
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            }
+        }
+    });
+}
+
+/* ---------- достать R и C из формы ---------- */
+function readForm(id) {
+    const f = document.forms[id];
+    return {
+        R: +f.resistance.value,
+        C: +f.capacitance.value
+    };
+}
+
+/* ---------- построить оба сигнала на одном графике ---------- */
+function plotUnified() {
+    const f1 = readForm('controls1');
+    const f2 = readForm('controls2');
+
+    const { t: t1, u: u1 } = simulateSquareWave(f1.R, f1.C);
+    const { t: t2, u: u2 } = simulateSquareWave(f2.R, f2.C);
+
+    chart.data.labels = t1;
+    chart.data.datasets[0].data = u1;
+    chart.data.datasets[1].data = u2;
+
+    chart.update();
+}
+
+/* ---------- инициализация ---------- */
+window.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('chart1').getContext('2d');
+    chart = createUnifiedChart(ctx);
+
+    document.getElementById('runBtn').addEventListener('click', plotUnified);
+    plotUnified(); // первый запуск
+});
+
+// В начале файла script.js или через отдельный загрузчик
+fetch('shema.svg')
+    .then(res => res.text())
+    .then(svg => {
+        document.getElementById('svg-container').innerHTML = svg;
+        init(); // инициализация логики после загрузки SVG
+    });
+function init() {
+    // Объект для хранения соединений
+    const connections = {
+        top1: null,
+        top2: null,
+        top3: null,
+        top4: null
+    };
+
+    // Значения для каждого соединения (временные)
+    const values = {
+        top1: {
+            1: 10,
+            2: 22,
+            3: 47,
+            4: 100,
+            5: 220
+        },
+        top2: {
+            1: 2,
+            2: 4,
+            3: 6,
+            4: 8,
+            5: 10
+        },
+        top3: {
+            1: 2,
+            2: 4,
+            3: 6,
+            4: 8,
+            5: 10
+        },
+        top4: {
+            1: 10,
+            2: 22,
+            3: 47,
+            4: 100,
+            5: 220
+        }
+    };
+
+    // Маппинг между id ручек и id верхних кружков
+    const handleToTop = {
+        'handle-top1': 'top1',
+        'handle-top2': 'top2',
+        'handle-top3': 'top3',
+        'handle-top4': 'top4'
+    };
+
+    // Получаем все элементы
+    const smallCircles = document.querySelectorAll('.small-circle');
+    const largeCircles = document.querySelectorAll('.large-circle');
+    const connectionsGroup = document.getElementById('connections');
+    const wireHandles = document.querySelectorAll('.wire-handle');
+    const valuesList = document.getElementById('valuesList');
+    const resetButton = document.getElementById('resetButton');
+
+    // Для drag-and-drop
+    let draggedHandle = null;
+    let draggedWire = null;
+    let svgElement = document.querySelector('svg');
+    let svgPoint = svgElement.createSVGPoint();
+
+    // Функция для получения координат относительно SVG
+    function getCursorPosition(event) {
+        svgPoint.x = event.clientX;
+        svgPoint.y = event.clientY;
+        return svgPoint.matrixTransform(svgElement.getScreenCTM().inverse());
+    }
+
+    // Функция для создания или обновления проводка с S-образным изгибом
+    function createOrUpdateWire(topId, x2, y2) {
+        const topCircle = document.getElementById(topId);
+        const x1 = parseFloat(topCircle.getAttribute('cx'));
+        const y1 = parseFloat(topCircle.getAttribute('cy'));
+
+        // Проверяем наличие существующего проводка
+        let wire = document.getElementById(`wire-${topId}`);
+
+        if (!wire) {
+            // Создаем новый проводок как путь, если его нет
+            wire = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            wire.setAttribute('id', `wire-${topId}`);
+            wire.setAttribute('class', 'connection');
+            wire.setAttribute('fill', 'none');
+            connectionsGroup.appendChild(wire);
+        }
+
+        // Создаем S-образную кривую с несколькими точками
+        // Делим расстояние по Y на 3 части
+        const yDist = y2 - y1;
+        const y_1 = y1 + yDist * 0.3;
+        const y_2 = y1 + yDist * 0.7;
+
+        // Смещение для создания S-образной формы
+        const offsetRight = 30;  // Смещение вправо
+        const offsetLeft = -30;  // Смещение влево
+
+        // Создаем точки для сплайна
+        const d = `M ${x1} ${y1}
+               C ${x1 + offsetRight} ${y1 + 10}, ${x1 + offsetRight} ${y_1}, ${x1} ${y_1}
+               S ${x1 + offsetLeft} ${y_2}, ${x1} ${y_2}
+               S ${x2} ${y2 - 10}, ${x2} ${y2}`;
+
+        wire.setAttribute('d', d);
+
+        return wire;
+    }
+
+    // Функция для определения топового ID ручки по классам
+    function getTopIdFromHandle(handleElement) {
+        if (handleElement.classList.contains('for-top1')) return 'top1';
+        if (handleElement.classList.contains('for-top2')) return 'top2';
+        if (handleElement.classList.contains('for-top3')) return 'top3';
+        if (handleElement.classList.contains('for-top4')) return 'top4';
+
+        // Запасной вариант - использовать маппинг по ID
+        return handleToTop[handleElement.id];
+    }
+
+    // Функция для получения колонки из элемента по классам
+    function getColumnFromCircle(circleElement) {
+        if (circleElement.classList.contains('column-1')) return '1';
+        if (circleElement.classList.contains('column-2')) return '2';
+        if (circleElement.classList.contains('column-3')) return '3';
+        if (circleElement.classList.contains('column-4')) return '4';
+        return null;
+    }
+
+    // Функция для получения ряда из элемента по классам
+    function getRowFromCircle(circleElement) {
+        if (circleElement.classList.contains('row-1')) return '1';
+        if (circleElement.classList.contains('row-2')) return '2';
+        if (circleElement.classList.contains('row-3')) return '3';
+        if (circleElement.classList.contains('row-4')) return '4';
+        if (circleElement.classList.contains('row-5')) return '5';
+        return null;
+    }
+
+    // Обработчики событий для перетаскивания проводков
+    wireHandles.forEach(handle => {
+        // Начало перетаскивания
+        handle.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            draggedHandle = this;
+            const topId = getTopIdFromHandle(this);
+
+            // Удаляем существующее соединение, если есть
+            if (connections[topId]) {
+                connections[topId] = null;
+            }
+
+            // Создаем или обновляем проводок
+            const cursorPos = getCursorPosition(e);
+            draggedWire = createOrUpdateWire(topId, cursorPos.x, cursorPos.y);
+
+            // Обновляем отображение значений
+            updateValues();
+        });
+    });
+
+    // Перемещение мыши
+    document.addEventListener('mousemove', function(e) {
+        if (draggedHandle) {
+            const cursorPos = getCursorPosition(e);
+            const topId = getTopIdFromHandle(draggedHandle);
+            // Обновляем проводок при движении
+            draggedWire = createOrUpdateWire(topId, cursorPos.x, cursorPos.y);
+        }
+    });
+
+    // Завершение перетаскивания
+    document.addEventListener('mouseup', function(e) {
+        if (draggedHandle) {
+            const topId = getTopIdFromHandle(draggedHandle);
+            const cursorPos = getCursorPosition(e);
+
+            // Проверяем, не пересекает ли проводок большой кружок
+            let targetCircle = null;
+            let minDistance = Infinity;
+
+            largeCircles.forEach(circle => {
+                const cx = parseFloat(circle.getAttribute('cx'));
+                const cy = parseFloat(circle.getAttribute('cy'));
+                const r = parseFloat(circle.getAttribute('r'));
+
+                // Вычисляем расстояние от курсора до центра кружка
+                const distance = Math.sqrt(Math.pow(cx - cursorPos.x, 2) + Math.pow(cy - cursorPos.y, 2));
+
+                // Если курсор находится в пределах кружка и это ближайший кружок
+                if (distance <= r && distance < minDistance) {
+                    const column = getColumnFromCircle(circle);
+                    // Проверяем, подходит ли колонка для данного верхнего кружка
+                    if (
+                        (topId === 'top1' && column === '1') ||
+                        (topId === 'top2' && column === '2') ||
+                        (topId === 'top3' && column === '3') ||
+                        (topId === 'top4' && column === '4')
+                    ) {
+                        minDistance = distance;
+                        targetCircle = circle;
+                    }
+                }
+            });
+
+            if (targetCircle) {
+                // Если нашли подходящий кружок, фиксируем соединение
+                const cx = parseFloat(targetCircle.getAttribute('cx'));
+                const cy = parseFloat(targetCircle.getAttribute('cy'));
+                draggedWire = createOrUpdateWire(topId, cx, cy);
+
+                // Обновляем объект соединений
+                connections[topId] = {
+                    column: getColumnFromCircle(targetCircle),
+                    row: getRowFromCircle(targetCircle),
+                    circleId: targetCircle.id
+                };
+
+                // Подсветка соединенного кружка
+                targetCircle.classList.add('selected');
+                setTimeout(() => targetCircle.classList.remove('selected'), 500);
+            } else {
+                // Если не нашли подходящий кружок, удаляем проводок
+                if (draggedWire) {
+                    connectionsGroup.removeChild(draggedWire);
+                }
+            }
+
+            // Сбрасываем состояние перетаскивания
+            draggedHandle = null;
+            draggedWire = null;
+
+            // Обновляем отображение значений
+            updateValues();
+        }
+    });
+
+    // Кнопка сброса всех соединений
+    resetButton.addEventListener('click', function() {
+        // Удаляем все проводки
+        while (connectionsGroup.firstChild) {
+            connectionsGroup.removeChild(connectionsGroup.firstChild);
+        }
+
+        // Сбрасываем объект соединений
+        for (const topId in connections) {
+            connections[topId] = null;
+        }
+
+        // Обновляем отображение значений
+        updateValues();
+    });
+
+    // Функция обновления отображения значений
+    function updateValues() {
+        // Сброс значений
+        document.getElementById('resistanceLeft').textContent = '-';
+        document.getElementById('capacitanceLeft').textContent = '-';
+        document.getElementById('resistanceRight').textContent = '-';
+        document.getElementById('capacitanceRight').textContent = '-';
+
+        if (connections.top2) {
+            const { row } = connections.top2;
+            const value = values.top2[row];
+            document.getElementById('capacitanceLeft').textContent = value;
+        }
+        // Левый блок: top1 — сопротивление, top2 — ёмкость
+        if (connections.top1) {
+            const { row } = connections.top1;
+            const value = values.top1[row];
+            document.getElementById('resistanceLeft').textContent = value;
+        }
+        
+
+        // Правый блок: top4 — сопротивление, top3 — ёмкость
+        if (connections.top4) {
+            const { row } = connections.top4;
+            const value = values.top4[row];
+            document.getElementById('resistanceRight').textContent = value;
+        }
+        if (connections.top3) {
+            const { row } = connections.top3;
+            const value = values.top3[row];
+            document.getElementById('capacitanceRight').textContent = value;
+        }
+    }
+
+
+
+    // Инициализация отображения значений
+    updateValues();
+}
+
+// (fetch SVG выше вызывает init() после вставки)
+
