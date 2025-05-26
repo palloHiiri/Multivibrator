@@ -12,49 +12,43 @@
 </header>
 
 <main>
-    <!-- ЛЕВАЯ ПАНЕЛЬ -->
     <aside id="left" class="panel">
         <h2>График 1</h2>
         <div id="valuesGroupLeft">
 
             <p><strong>Емкость:</strong> <span id="resistanceLeft">-</span> qF</p>
             <p><strong>Сопротивление:</strong> <span id="capacitanceLeft">-</span> K</p>
+            <p><strong>t1:</strong> <span id="t1Value">-</span> с</p>
         </div>
         <button id="resetButton">Сбросить все соединения</button>
     </aside>
 
-    <!-- ОБЛАСТЬ ГРАФИКОВ -->
     <section id="charts">
         <div class="charts-flex">
             <canvas id="chart1"></canvas>
 
         </div>
 
-        <!-- БОЛЬШАЯ СХЕМА -->
         <div id="schematic-wrapper">
 
             <div id="svg-container"></div>
         </div>
     </section>
 
-    <!-- ПРАВАЯ ПАНЕЛЬ -->
     <aside id="right" class="panel">
         <h2>График 2</h2>
         <div id="valuesGroupRight">
 
             <p><strong>Емкость:</strong> <span id="resistanceRight">-</span> qF</p>
             <p><strong>Сопротивление:</strong> <span id="capacitanceRight">-</span> K</p>
+            <p><strong>t2:</strong> <span id="t2Value">-</span> с</p>
+            <p><strong>Период T:</strong> <span id="TValue">-</span> с</p>
         </div>
 
-
-        <!-- Кнопка внутри правой панели -->
         <button id="runBtn">Запустить&nbsp;симуляцию</button>
     </aside>
 </main>
 
-
-
-<!-- Скрипты -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="main.js"></script>
 </body>

@@ -1,25 +1,51 @@
-/* ---------- переменные ---------- */
 let chart;
 let R_left = 0;
 let C_left = 0;
 let R_right = 0;
 let C_right = 0;
 
-/* ---------- модель: прямоугольный сигнал от R и C ---------- */
-function simulateLinearU(R, C, points = 1000, maxT = 1) {
-    const t = [];
-    const u = [];
-    const dt = maxT / points;
+function plotUnified() {
+    const Ucc = 5, Uth = 2, U0 = 0.3;
+    const lnArg = (Ucc - U0) / (Ucc - Uth);
+    const delta = 0.2;
+    const n = 3 , points = 6000;
+
+    // Учёт единиц (килоОм и микрофарады -> секунды)
+    const t1 = R_left * 1e3 * C_left * 1e-6 * Math.log(lnArg);
+    const t2 = R_right * 1e3 *  C_right * 1e-6 * Math.log(lnArg);
+    const T = t1 + t2;
+    const dt = (n * T) / points;
+
+    const t_arr = [];
+    const u1 = [];
+    const u2 = [];
 
     for (let i = 0; i < points; i++) {
-        const time = i * dt;
-        const voltage = C * time + R;
-        t.push(+time.toFixed(5));
-        u.push(+voltage.toFixed(3));
+        const t = i * dt;
+        const modT = t % T;
+
+        const val1 = modT < t1 ? Ucc : 0;
+        const val2 = ((t - t1) % T) >= t2 ? Ucc : 0;
+
+        u1.push(- (val1 + delta));
+        u2.push(val2 + delta);
+        t_arr.push(t)
     }
 
-    return { t, u };
+    chart.data.labels = t_arr;
+    chart.data.datasets[0].data = u1.map(v => +v.toFixed(3));
+    chart.data.datasets[1].data = u2.map(v => +v.toFixed(3));
+
+    chart.data.datasets[0].label = `T1 (R=${R_left}kΩ, C=${C_left}μF)`;
+    chart.data.datasets[1].label = `T2 (R=${R_right}kΩ, C=${C_right}μF)`;
+
+    document.getElementById('t1Value').textContent = t1.toFixed(4);
+    document.getElementById('t2Value').textContent = t2.toFixed(4);
+    document.getElementById('TValue').textContent = T.toFixed(4);
+
+    chart.update();
 }
+
 
 
 
@@ -81,20 +107,7 @@ function createUnifiedChart(ctx) {
 }
 
 
-/* ---------- построить оба сигнала на одном графике ---------- */
-function plotUnified() {
-    const { t: t1, u: u1 } = simulateLinearU(R_left, C_left);
-    const { t: t2, u: u2 } = simulateLinearU(R_right, C_right);
-    console.log(R_left, R_right, C_left, C_right)
-    chart.data.labels = t1;
-    chart.data.datasets[0].data = u1;
-    chart.data.datasets[1].data = u2;
 
-    chart.data.datasets[0].label = `Канал 1 (R=${R_left}, C=${C_left})`;
-    chart.data.datasets[1].label = `Канал 2 (R=${R_right}, C=${C_right})`;
-
-    chart.update();
-}
 
 
 
