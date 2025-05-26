@@ -8,7 +8,7 @@ function plotUnified() {
     const Ucc = 5, Uth = 2, U0 = 0.3;
     const lnArg = (Ucc - U0) / (Ucc - Uth);
     const delta = 0.2;
-    const n = 3 , points = 6000;
+    const n = 4 , points = 6000;
 
     // Учёт единиц (килоОм и микрофарады -> секунды)
     const t1 = R_left * 1e3 * C_left * 1e-6 * Math.log(lnArg);
@@ -20,16 +20,20 @@ function plotUnified() {
     const u1 = [];
     const u2 = [];
 
+    const timeOffset = T * 0.5; // Сдвигаем на половину периода
+
     for (let i = 0; i < points; i++) {
         const t = i * dt;
-        const modT = t % T;
+        // Добавляем смещение для расчетов
+        const tWithOffset = t + timeOffset;
+        const modT = tWithOffset % T;
 
         const val1 = modT < t1 ? Ucc : 0;
-        const val2 = ((t - t1) % T) >= t2 ? Ucc : 0;
+        const val2 = ((tWithOffset - t1) % T) >= t2 ? Ucc : 0;
 
-        u1.push(- (val1 + delta));
+        u1.push(-(val1 + delta));
         u2.push(val2 + delta);
-        t_arr.push(t)
+        t_arr.push(t) // Отображаем на графике исходное время без смещения
     }
 
     chart.data.labels = t_arr;
@@ -106,12 +110,6 @@ function createUnifiedChart(ctx) {
     });
 }
 
-
-
-
-
-
-
 /* ---------- инициализация ---------- */
 window.addEventListener('DOMContentLoaded', () => {
     const ctx = document.getElementById('chart1').getContext('2d');
@@ -122,7 +120,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // В начале файла script.js или через отдельный загрузчик
-fetch('shema.svg')
+fetch('shema_num_no_border.svg')
     .then(res => res.text())
     .then(svg => {
         document.getElementById('svg-container').innerHTML = svg;
@@ -389,7 +387,7 @@ function init() {
         C_left = 0;
         R_right = 0;
         C_right = 0;
-        
+
         if (connections.top2) {
             const { row } = connections.top2;
             const value = values.top2[row];
@@ -415,7 +413,7 @@ function init() {
             document.getElementById('capacitanceRight').textContent = value;
         }
     }
-    
+
     updateValues();
 }
 
