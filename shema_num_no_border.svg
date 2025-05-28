@@ -46,6 +46,9 @@
     /* Классы для определения связи с верхним кружком */
     }
   </style>
+  <circle cx="253" cy="116" r="10" stroke="black" stroke-width="2" fill="none" />
+  <!--  правый верхний -->
+  <circle cx="547" cy="116" r="10" stroke="black" stroke-width="2" fill="none" />
 
   <!-- верхние 4 кружочка -->
   <circle id="top1" class="small-circle" cx="253" cy="162" r="6" stroke="black" stroke-width="2" />

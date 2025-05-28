@@ -9,6 +9,33 @@
 <body>
 <header>
     <h1>Симулятор мультивибратора</h1>
+    <div class="info-container">
+        <button class="info-button">ℹ️</button>
+        <div class="info-box">
+            <p><strong>Рассчитаем</strong> время каждого из сигналов</p>
+            <p>Используем формулу:</p>
+            <div class="formula">
+                $$t = RC \ln\left(\frac{U_{cc} - U_0}{U_{cc} - U_{th}}\right)$$
+            </div>
+            <ul>
+                <li><em>R</em> — сопротивление резистора</li>
+                <li><em>C</em> — ёмкость конденсатора</li>
+                <li><em>U<sub>cc</sub></em> — напряжение источника питания</li>
+                <li><em>U<sub>th</sub></em> — пороговое напряжение транзистора</li>
+                <li><em>U<sub>0</sub></em> — напряжение насыщения транзистора</li>
+            </ul>
+            <br>
+            <p>Рассчитаем период:</p>
+            <div class="formula">
+                $$T = t_1 + t_2$$
+            </div>
+            <p><strong>Период T:</strong> <span id="TValue">-</span> с</p>
+            <p>Рассчитаем скважность:</p>
+            <div class="formula">
+                $$D = \frac{t}{T}$$
+            </div>
+        </div>
+    </div>
 </header>
 
 <main>
@@ -19,6 +46,7 @@
             <p><strong>Емкость:</strong> <span id="resistanceLeft">-</span> qF</p>
             <p><strong>Сопротивление:</strong> <span id="capacitanceLeft">-</span> K</p>
             <p><strong>t1:</strong> <span id="t1Value">-</span> с</p>
+            <p><strong>D1:</strong> <span id="D1Value">-</span></p>
         </div>
         <button id="resetButton">Сбросить все соединения</button>
     </aside>
@@ -42,7 +70,8 @@
             <p><strong>Емкость:</strong> <span id="resistanceRight">-</span> qF</p>
             <p><strong>Сопротивление:</strong> <span id="capacitanceRight">-</span> K</p>
             <p><strong>t2:</strong> <span id="t2Value">-</span> с</p>
-            <p><strong>Период T:</strong> <span id="TValue">-</span> с</p>
+            <p><strong>D2:</strong> <span id="D2Value">-</span></p>
+
         </div>
 
         <button id="runBtn">Запустить&nbsp;симуляцию</button>
@@ -50,6 +79,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js?config=TeX-AMS_HTML"></script>
 <script src="main.js"></script>
 </body>
 </html>

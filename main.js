@@ -19,8 +19,11 @@ function plotUnified() {
     const t_arr = [];
     const u1 = [];
     const u2 = [];
+    
+    const D1 = t1/T;
+    const D2 = t2/T;
 
-    const timeOffset = T * 0.5; // Сдвигаем на половину периода
+    const timeOffset = T * 1.5; // Сдвигаем на половину периода
 
     for (let i = 0; i < points; i++) {
         const t = i * dt;
@@ -46,8 +49,12 @@ function plotUnified() {
     document.getElementById('t1Value').textContent = t1.toFixed(4);
     document.getElementById('t2Value').textContent = t2.toFixed(4);
     document.getElementById('TValue').textContent = T.toFixed(4);
+    document.getElementById('D1Value').textContent = D1.toFixed(4);
+    document.getElementById('D2Value').textContent = D2.toFixed(4);
+    // скважность
 
     chart.update();
+    startBlinking()
 }
 
 
@@ -417,4 +424,123 @@ function init() {
     updateValues();
 }
 
+// Переменные для управления миганием
+let blinkingInterval = null;
+
+// Функция для запуска мигания кружочков
+function startBlinking() {
+    // Останавливаем предыдущий интервал если он есть
+    stopBlinking();
+
+    // Ждем немного, чтобы SVG загрузился
+    setTimeout(() => {
+        // Ищем кружочки разными способами
+        let circle1 = document.querySelector('circle[cx="253"][cy="116"]');
+        let circle2 = document.querySelector('circle[cx="547"][cy="116"]');
+
+        // Если не нашли точно по координатам, ищем приблизительно
+        if (!circle1) {
+            const circles = document.querySelectorAll('circle');
+            circles.forEach(circle => {
+                const cx = parseFloat(circle.getAttribute('cx'));
+                const cy = parseFloat(circle.getAttribute('cy'));
+                if (Math.abs(cx - 253) < 5 && Math.abs(cy - 116) < 5) {
+                    circle1 = circle;
+                }
+            });
+        }
+
+        if (!circle2) {
+            const circles = document.querySelectorAll('circle');
+            circles.forEach(circle => {
+                const cx = parseFloat(circle.getAttribute('cx'));
+                const cy = parseFloat(circle.getAttribute('cy'));
+                if (Math.abs(cx - 547) < 5 && Math.abs(cy - 116) < 5) {
+                    circle2 = circle;
+                }
+            });
+        }
+
+        console.log('Найденные кружочки:', circle1, circle2); // для отладки
+
+        if (!circle1 || !circle2) {
+            console.log('Кружочки не найдены!');
+            return;
+        }
+
+        // Рассчитываем параметры мигания
+        const Ucc = 5, Uth = 2, U0 = 0.3;
+        const lnArg = (Ucc - U0) / (Ucc - Uth);
+
+        const t1 = R_left * 1e3 * C_left * 1e-6 * Math.log(lnArg);
+        const t2 = R_right * 1e3 * C_right * 1e-6 * Math.log(lnArg);
+        const T = t1 + t2;
+
+        console.log('Времена:', { t1, t2, T, R_left, C_left, R_right, C_right }); // для отладки
+
+        if (T <= 0 || isNaN(T) || R_left === 0 || C_left === 0 || R_right === 0 || C_right === 0) {
+            console.log('Некорректные значения для мигания');
+            return;
+        }
+
+        // Сохраняем исходные цвета заливки
+        const originalFill1 = circle1.getAttribute('fill') || 'none';
+        const originalFill2 = circle2.getAttribute('fill') || 'none';
+
+        console.log('Запускаем мигание с периодом T =', T, 'секунд');
+
+        // Запоминаем время начала
+        const startTime = Date.now() / 1000;
+
+        // Единый интервал для управления обоими кружочками
+        blinkingInterval = setInterval(() => {
+            const currentTime = (Date.now() / 1000 - startTime) % T; // текущее время в периоде
+
+            // Логика: первый кружочек горит время t1, затем второй горит время t2
+            if (currentTime < t1) {
+                // Горит первый кружочек (время от 0 до t1)
+                circle1.setAttribute('fill', 'red');
+                circle1.setAttribute('stroke', 'red');
+                circle1.setAttribute('stroke-width', '3');
+
+                circle2.setAttribute('fill', originalFill2);
+                circle2.setAttribute('stroke', 'black');
+                circle2.setAttribute('stroke-width', '2');
+            } else {
+                // Горит второй кружочек (время от t1 до T)
+                circle1.setAttribute('fill', originalFill1);
+                circle1.setAttribute('stroke', 'black');
+                circle1.setAttribute('stroke-width', '2');
+
+                circle2.setAttribute('fill', 'red');
+                circle2.setAttribute('stroke', 'red');
+                circle2.setAttribute('stroke-width', '3');
+            }
+        }, 50); // обновление каждые 50мс для плавности
+
+    }, 500); // ждем 500мс для загрузки SVG
+}
+
+// Функция для остановки мигания
+function stopBlinking() {
+    if (blinkingInterval) {
+        clearInterval(blinkingInterval);
+        blinkingInterval = null;
+    }
+
+    // Возвращаем исходный вид кружочкам
+    setTimeout(() => {
+        const circles = document.querySelectorAll('circle');
+        circles.forEach(circle => {
+            const cx = parseFloat(circle.getAttribute('cx'));
+            const cy = parseFloat(circle.getAttribute('cy'));
+            if ((Math.abs(cx - 253) < 5 && Math.abs(cy - 116) < 5) ||
+                (Math.abs(cx - 547) < 5 && Math.abs(cy - 116) < 5)) {
+                circle.setAttribute('fill', 'none');
+                circle.setAttribute('stroke', 'black');
+                circle.setAttribute('stroke-width', '2');
+            }
+        });
+    }, 100);
+}
 

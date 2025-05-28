@@ -121,4 +121,46 @@ input[type=number]{width:100%;margin-top:0.25rem;padding:0.3em}
     object-fit: contain;
 }
 
+.info-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #006cff;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+}
 
+.info-box {
+    position: absolute;
+    top: 50px;
+    left: 10px;
+    background-color: #c8e2ff;
+    color: black;
+    border: 1px solid #666;
+    border-radius: 6px;
+    padding: 16px;
+    max-width: 420px;
+    display: none;
+    z-index: 10;
+}
+
+.info-box p {
+    margin: 0 0 10px;
+}
+
+.info-box:hover {
+    display: block;
+}
+
+.info-container:hover .info-box {
+    display: block;
+}
+
+.formula {
+    font-size: 1.2em;
+    margin-top: 10px;
+}
