@@ -380,6 +380,8 @@ function init() {
         }
 
         updateValues();
+        stopBlinking();
+        plotUnified();
     });
 
     // Функция обновления отображения значений
