@@ -164,3 +164,24 @@ input[type=number]{width:100%;margin-top:0.25rem;padding:0.3em}
     font-size: 1.2em;
     margin-top: 10px;
 }
+
+/* Новый контейнер для текста внутри aside */
+.panel .info-block {
+    background: rgba(0, 64, 128, 0.1); /* тёмный полупрозрачный фон */
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* вертикальное центрирование */
+    align-items: center;
+    flex: 1; /* чтобы заняло оставшееся место */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* объем */
+    margin-top: 0.5rem;
+    font-size: 20px;
+}
+
+.panel h2 {
+    text-align: center; /* центрирует заголовок "График" */
+    margin-bottom: 0.5rem;
+    font-size: 30px;
+}
